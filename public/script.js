@@ -7,6 +7,7 @@
   const statusEl = document.getElementById('status');
   const resetBtn = document.getElementById('reset-btn');
   const langButtons = document.querySelectorAll('.lang-switch__btn');
+  const modeButtons = document.querySelectorAll('.mode-switch__btn');
 
   const titleEl = document.getElementById('title');
   const subtitleEl = document.getElementById('subtitle');
@@ -18,6 +19,8 @@
   const step2TitleEl = document.getElementById('step2-title');
   const step2HintEl = document.getElementById('step2-hint');
   const footerTextEl = document.getElementById('footer-text');
+  const modeTwoTextEl = document.getElementById('mode-two-text');
+  const modeComputerTextEl = document.getElementById('mode-computer-text');
 
   const translations = {
     ru: {
@@ -36,6 +39,8 @@
       footer: 'Node.js Tic-Tac-Toe',
       placeholder: '1–100',
       playerName: { X: 'X (крестики)', O: 'O (нолики)' },
+      modeTwo: '2 игрока',
+      modeComputer: 'Против компьютера',
       statusNeedFirst: 'Сначала выберите, кто ходит первым (шаг 1).',
       statusErrorChooseFirst: 'Сначала выберите, кто ходит первым, заполнив числа в шаге 1.',
       statusInvalidNumbers: 'Ошибка ввода чисел. Убедитесь, что оба игрока ввели числа от 1 до 100.',
@@ -73,6 +78,8 @@
       footer: 'Node.js Tic-Tac-Toe',
       placeholder: '1–100',
       playerName: { X: 'X (crosses)', O: 'O (noughts)' },
+      modeTwo: '2 players',
+      modeComputer: 'Vs computer',
       statusNeedFirst: 'Choose who goes first (step 1).',
       statusErrorChooseFirst: 'First decide who goes first by filling the numbers in step 1.',
       statusInvalidNumbers: 'Input error. Make sure both players enter numbers from 1 to 100.',
@@ -108,11 +115,15 @@
   ];
 
   let currentLang = 'ru';
+  let gameMode = 'two'; // 'two' | 'computer'
   let board = Array(9).fill(null);
   let currentPlayer = null;
   let gameActive = false;
   let firstMoveChosen = false;
   let randomContext = null;
+
+  const HUMAN_SYMBOL = 'X';
+  const COMPUTER_SYMBOL = 'O';
 
   const t = (key) => translations[currentLang][key];
 
@@ -163,6 +174,15 @@
     });
   }
 
+  function setFirstMoveButtonEnabled(enabled) {
+    firstMoveBtnEl.disabled = !enabled;
+    if (enabled) {
+      firstMoveBtnEl.classList.remove('btn--disabled');
+    } else {
+      firstMoveBtnEl.classList.add('btn--disabled');
+    }
+  }
+
   function resetGame(fullResetFirstMove = true, keepRandomResult = true) {
     board = Array(9).fill(null);
     gameActive = false;
@@ -179,7 +199,9 @@
     if (fullResetFirstMove) {
       firstMoveChosen = false;
       currentPlayer = null;
+      gameMode === 'computer' ? (inputO.value = '') : null;
       setStatus(t('statusNeedFirst'));
+      setFirstMoveButtonEnabled(true);
       return;
     }
 
@@ -241,6 +263,10 @@
     if (!gameActive) {
       return;
     }
+    // В режиме против компьютера человек может ходить только за HUMAN_SYMBOL
+    if (gameMode === 'computer' && currentPlayer === COMPUTER_SYMBOL) {
+      return;
+    }
     if (board[index] !== null) {
       return;
     }
@@ -263,6 +289,96 @@
 
     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     setStatus(t('statusTurn')(currentPlayer), 'turn');
+
+    if (gameMode === 'computer' && gameActive && currentPlayer === COMPUTER_SYMBOL) {
+      // Небольшая задержка для более естественного поведения компьютера
+      setTimeout(() => {
+        makeComputerMove();
+      }, 450);
+    }
+  }
+
+  function getAvailableIndices() {
+    const indices = [];
+    board.forEach((value, idx) => {
+      if (value === null) indices.push(idx);
+    });
+    return indices;
+  }
+
+  function findWinningMove(symbol) {
+    for (const combo of winningCombos) {
+      const [a, b, c] = combo;
+      const line = [board[a], board[b], board[c]];
+      const filled = line.filter((v) => v === symbol).length;
+      const emptyIndex = [a, b, c].find((idx) => board[idx] === null);
+      if (filled === 2 && emptyIndex !== undefined) {
+        return emptyIndex;
+      }
+    }
+    return null;
+  }
+
+  function chooseComputerMove() {
+    const available = getAvailableIndices();
+    if (available.length === 0) return null;
+
+    // 1. Победный ход
+    const winningMove = findWinningMove(COMPUTER_SYMBOL);
+    if (winningMove !== null) return winningMove;
+
+    // 2. Блокировка победы игрока
+    const blockMove = findWinningMove(HUMAN_SYMBOL);
+    if (blockMove !== null) return blockMove;
+
+    // 3. Центр
+    if (board[4] === null) return 4;
+
+    // 4. Углы
+    const corners = [0, 2, 6, 8].filter((idx) => board[idx] === null);
+    if (corners.length > 0) {
+      return corners[Math.floor(Math.random() * corners.length)];
+    }
+
+    // 5. Любая доступная клетка
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  function makeComputerMove() {
+    if (!gameActive || !firstMoveChosen || currentPlayer !== COMPUTER_SYMBOL) return;
+
+    const moveIndex = chooseComputerMove();
+    if (moveIndex === null) return;
+
+    const cellEl = boardEl.querySelector(`.cell[data-index="${moveIndex}"]`);
+    if (!cellEl || board[moveIndex] !== null) return;
+
+    board[moveIndex] = COMPUTER_SYMBOL;
+    renderMark(cellEl, COMPUTER_SYMBOL);
+
+    const result = checkWinner();
+    if (result) {
+      gameActive = false;
+      if (result.draw) {
+        setStatus(t('statusDraw'), 'draw');
+        return;
+      }
+
+      highlightWinningCombo(result.combo);
+      setStatus(t('statusWin')(result.winner), 'win');
+      return;
+    }
+
+    currentPlayer = HUMAN_SYMBOL;
+    setStatus(t('statusTurn')(currentPlayer), 'turn');
+  }
+
+  function scheduleComputerMoveIfNeeded() {
+    if (gameMode === 'computer' && gameActive && currentPlayer === COMPUTER_SYMBOL) {
+      setTimeout(() => {
+        makeComputerMove();
+      }, 450);
+    }
   }
 
   function updateStatusLocalized() {
@@ -306,6 +422,8 @@
     step2HintEl.textContent = t('step2Hint');
     resetBtn.textContent = t('btnReset');
     footerTextEl.textContent = t('footer');
+    modeTwoTextEl.textContent = t('modeTwo');
+    modeComputerTextEl.textContent = t('modeComputer');
   }
 
   function setLanguage(lang) {
@@ -333,11 +451,46 @@
     boardEl.addEventListener('click', handleCellClick);
   }
 
+  function setGameMode(mode) {
+    if (mode !== 'two' && mode !== 'computer') return;
+    gameMode = mode;
+
+    modeButtons.forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.mode === mode);
+    });
+
+    // В режиме против компьютера число для O (компьютер) будет выбрано автоматически
+    if (gameMode === 'computer') {
+      inputO.disabled = true;
+      inputO.value = '';
+    } else {
+      inputO.disabled = false;
+      inputO.value = '';
+    }
+
+    resetGame(true, false);
+  }
+
+  function initModeSwitcher() {
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setGameMode(btn.dataset.mode);
+      });
+    });
+  }
+
   form.addEventListener('submit', (event) => {
     event.preventDefault();
 
     const valueX = Number(inputX.value);
-    const valueO = Number(inputO.value);
+    let valueO;
+
+    if (gameMode === 'computer') {
+      valueO = Math.floor(Math.random() * 100) + 1;
+      inputO.value = valueO.toString();
+    } else {
+      valueO = Number(inputO.value);
+    }
 
     if (
       Number.isNaN(valueX) ||
@@ -374,16 +527,24 @@
     randomContext = { type: 'winner', randomNumber, diffX, diffO, firstPlayer };
     renderRandomContext();
 
+    // После определения очередности хода — блокируем кнопку до следующей игры
+    setFirstMoveButtonEnabled(false);
+
     resetGame(false, true);
+
+    // Если в режиме против компьютера первый ход за компьютером — он должен сделать ход
+    scheduleComputerMoveIfNeeded();
   });
 
   resetBtn.addEventListener('click', () => {
-    resetGame(false, true);
+    // Начать новую игру: снова нужно определять, кто ходит первым
+    resetGame(true, false);
   });
 
   function init() {
     applyStaticTexts();
     initLanguageSwitcher();
+    initModeSwitcher();
     initBoardListeners();
     resetGame(true, false);
     renderRandomContext();
