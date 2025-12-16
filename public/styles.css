@@ -448,7 +448,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(48px, 5vw, 58px);
+  font-size: clamp(48px, 5vw, 72px);
   font-weight: 800;
   letter-spacing: 0.1em;
   color: white;
@@ -582,12 +582,24 @@ body {
   }
 
   .board {
-    max-width: 440px;
+    max-width: 520px;
+    width: 100%;
     margin-inline: auto;
   }
 }
 
 @media (max-width: 640px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .page {
+    padding: 16px 10px 20px;
+    gap: 16px;
+  }
+
   .header {
     padding: 14px 14px 16px;
   }
@@ -605,8 +617,14 @@ body {
   }
 
   .board {
-    padding: 10px;
-    gap: 8px;
+    padding: 8px;
+    gap: 6px;
+    max-width: 100%;
+    width: min(100vw - 24px, 480px);
+  }
+
+  .cell__content {
+    font-size: clamp(40px, 18vw, 80px);
   }
 }
 
