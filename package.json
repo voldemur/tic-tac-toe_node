@@ -1,0 +1,18 @@
+{
+  "name": "tictactoe-node-game",
+  "version": "1.0.0",
+  "description": "Простая игра крестики-нолики на Node.js с красивой графикой и анимацией.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "node",
+    "tic-tac-toe",
+    "game"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
+

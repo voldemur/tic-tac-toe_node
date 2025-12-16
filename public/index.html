@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Крестики-нолики на Node.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="header">
+        <div class="header__row">
+          <div>
+            <h1 id="title">Крестики-нолики</h1>
+            <p class="subtitle" id="subtitle">
+              Выберите, кто ходит первым, загадав числа от 1 до 100, затем
+              играйте с красивой анимацией ходов.
+            </p>
+          </div>
+          <div class="lang-switch" aria-label="Language switcher">
+            <button class="lang-switch__btn is-active" data-lang="ru">Ru</button>
+            <button class="lang-switch__btn" data-lang="en">En</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="panel panel--setup">
+          <h2 id="step1-title">1. Выбор первого хода</h2>
+          <p class="hint" id="step1-hint">
+            Игрок за <span class="mark mark--x">X</span> и игрок за
+            <span class="mark mark--o">O</span> загадывают числа от 1 до 100.
+            Игра генерирует случайное число, и тот, чьё число ближе, ходит
+            первым.
+          </p>
+
+          <form id="first-move-form" class="guess-form">
+            <div class="guess-form__row">
+              <label>
+                <span id="label-x">Число игрока <span class="mark mark--x">X</span></span>
+                <input
+                  type="number"
+                  id="guess-x"
+                  min="1"
+                  max="100"
+                  required
+                  placeholder="1–100"
+                />
+              </label>
+              <label>
+                <span id="label-o">Число игрока <span class="mark mark--o">O</span></span>
+                <input
+                  type="number"
+                  id="guess-o"
+                  min="1"
+                  max="100"
+                  required
+                  placeholder="1–100"
+                />
+              </label>
+            </div>
+
+            <button id="first-move-btn" type="submit" class="btn btn--primary">
+              Определить, кто ходит первым
+            </button>
+          </form>
+
+          <div id="random-result" class="random-result hidden"></div>
+        </section>
+
+        <section class="panel panel--game">
+          <h2 id="step2-title">2. Игра</h2>
+          <p class="hint" id="step2-hint">
+            Кликайте по свободным ячейкам. Фигуры появляются с плавной
+            анимацией. Победная линия подсвечивается.
+          </p>
+
+          <div class="game-layout">
+            <div id="board" class="board">
+              <div class="cell" data-index="0"></div>
+              <div class="cell" data-index="1"></div>
+              <div class="cell" data-index="2"></div>
+              <div class="cell" data-index="3"></div>
+              <div class="cell" data-index="4"></div>
+              <div class="cell" data-index="5"></div>
+              <div class="cell" data-index="6"></div>
+              <div class="cell" data-index="7"></div>
+              <div class="cell" data-index="8"></div>
+            </div>
+
+            <div class="side-panel">
+              <div id="status" class="status"></div>
+              <button id="reset-btn" class="btn btn--ghost">
+                Начать заново
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span id="footer-text">Node.js Tic-Tac-Toe</span>
+      </footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
+
+
